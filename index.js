@@ -5,11 +5,15 @@ import morgan from "morgan";
 import { sql } from "./config/db.js";
 import limiter from "./middleware/rate-limiting.js";
 import transactionsRouter from "./routes/transactions.js";
+import cronJob from "./cron/index.js";
 
 dotenv.config();
 const app = express();
-const inProduction = process.env.NODE_ENV === 'production';
+const inProduction = process.env.NODE_ENV === "production";
 
+if (inProduction) {
+  cronJob.start();
+}
 app.use(limiter);
 app.use(
   cors({
@@ -17,12 +21,12 @@ app.use(
     credentials: true,
   })
 );
-app.use(morgan(`${inProduction ? "tiny" : "dev"}`))
+app.use(morgan(`${inProduction ? "tiny" : "dev"}`));
 app.use(express.json());
 app.use("/api/transactions", transactionsRouter);
 app.use((req, res, next, err) => {
-    console.log(err.stack, err.message)
-})
+  console.log(err.stack, err.message);
+});
 
 initializeServer(app);
 initializeDatabase();
@@ -39,8 +43,8 @@ function initializeServer(app) {
 }
 
 async function initializeDatabase() {
-    try {
-        await sql`CREATE TABLE IF NOT EXISTS transactions (
+  try {
+    await sql`CREATE TABLE IF NOT EXISTS transactions (
             id SERIAL NOT NULL PRIMARY KEY,
             user_id VARCHAR(255) NOT NULL,
             title VARCHAR(255) NOT NULL,
@@ -48,8 +52,8 @@ async function initializeDatabase() {
             category VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`;
-        console.log("--- Database connection successful ---");
-    } catch (error) {
-        console.error("--- Database connection error ---", error);
-    }
+    console.log("--- Database connection successful ---");
+  } catch (error) {
+    console.error("--- Database connection error ---", error);
+  }
 }
