@@ -6,7 +6,7 @@ const router = Router();
 const validationQ = [
   body("title").isString().trim().notEmpty().withMessage("Title is required"),
 
-  body("user_id").isInt().withMessage("User ID must be an integer"),
+  body("user_id").isString(),
 
   body("amount").isNumeric().withMessage("Amount must be a number"),
 
@@ -19,7 +19,7 @@ const validationQ = [
 
 router.get(
   "/:id",
-  param("id").isInt().withMessage("ID must be an integer"),
+  param("id").isString().withMessage("ID must be a string"),
   async (req, res) => {
     try {
       const result = validationResult(req);
@@ -38,7 +38,7 @@ router.get(
 
 router.delete(
   "/:id",
-  param("id").isInt().withMessage("ID must be an integer"),
+  param("id").isString().withMessage("ID must be a string"),
   async (req, res) => {
     const result = validationResult(req);
     if (!result.isEmpty()) {
@@ -73,7 +73,7 @@ router.post("/", validationQ, async (req, res) => {
   }
 });
 
-router.get("/summaries/:user_id", param("user_id").isInt().withMessage("User ID must be an integer"), async (req, res) => {
+router.get("/summaries/:user_id", param("user_id").isString().withMessage("User ID must be a string"), async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
