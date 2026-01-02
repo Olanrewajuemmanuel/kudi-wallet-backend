@@ -18,23 +18,36 @@ const validationQ = [
 ];
 
 router.get(
-  "/:id",
-  param("id").isString().withMessage("ID must be a string"),
+  "/all/:user_id",
+  param("user_id").isString().withMessage("User ID must be a string"),
   async (req, res) => {
     try {
       const result = validationResult(req);
       if (!result.isEmpty()) {
         return res.status(400).json(result.array());
       }
-      const { id } = req.params;
+      const { user_id } = req.params;
       const transactions =
-        await sql`SELECT * FROM transactions WHERE id = ${id}`;
+        await sql`SELECT * FROM transactions WHERE user_id = ${user_id}`;
       return res.status(200).json(transactions);
     } catch (error) {
       return res.status(500).json(error);
     }
   }
 );
+
+router.get("/:id", param("id").isString().withMessage("ID must be a string"), async (req, res) => {
+  const result = validationResult(req);
+  if (!result.isEmpty()) {
+    return res.status(400).json(result.array());
+  }
+  const id = req.params.id;
+  const transaction = await sql`SELECT * FROM transactions WHERE id = ${id}`;
+  if (transaction.length === 0) {
+    return res.status(404).json({ message: "Transaction not found" });
+  }
+  return res.status(200).json(transaction);
+})
 
 router.delete(
   "/:id",
