@@ -1,10 +1,13 @@
 import cron from "cron";
 import https from "https";
 
-// Define a cron job that runs every 14 minutes
-const cronJob = cron.schedule("*/14 * * * *", async () => {
-    https.get(process.env.API_URL + "/health");
-    console.log("--- Running cron job ---");
+const job = new cron.CronJob("*/14 * * * *", function () {
+  https
+    .get(process.env.API_URL + "/health", (res) => {
+      if (res.statusCode === 200) console.log("GET request sent successfully");
+      else console.log("GET request failed", res.statusCode);
+    })
+    .on("error", (e) => console.error("Error while sending request", e));
 });
 
-export default cronJob;
+export default job;
