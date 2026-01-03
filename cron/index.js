@@ -1,4 +1,4 @@
-import cron from "node-cron";
+import cron from "cron";
 import https from "https";
 
 // Define a cron job that runs every 14 minutes
