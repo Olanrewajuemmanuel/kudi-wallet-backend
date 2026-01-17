@@ -2,10 +2,12 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
+import responseTime from "response-time";
 import { sql } from "./config/db.js";
 import limiter from "./middleware/rate-limiting.js";
 import transactionsRouter from "./routes/transactions.js";
 import cronJob from "./cron/index.js";
+import { restResponseTimeHistogram, startMetricServer } from "./metrics.js";
 
 dotenv.config();
 const app = express();
@@ -19,10 +21,24 @@ app.use(
   cors({
     origin: "*",
     credentials: true,
-  })
+  }),
 );
 app.use(morgan(`${inProduction ? "tiny" : "dev"}`));
 app.use(express.json());
+app.use(
+  responseTime((req, res, time) => {
+    if (req?.route?.path) {
+      restResponseTimeHistogram.observe(
+        {
+          method: req.method,
+          route: req.route.path,
+          status_code: res.statusCode,
+        },
+        time / 1000,
+      );
+    }
+  }),
+);
 app.use("/api/transactions", transactionsRouter);
 app.use((req, res, next, err) => {
   console.log(err.stack, err.message);
@@ -40,6 +56,8 @@ function initializeServer(app) {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
+  // Start metrics server
+  startMetricServer();
 }
 
 async function initializeDatabase() {
